@@ -1,0 +1,6 @@
+# 本地开关文件（是否使用 Nerd Font 图标）
+.nerd-icons
+# 备份 / 临时文件
+*.bak
+*.swp
+.DS_Store
