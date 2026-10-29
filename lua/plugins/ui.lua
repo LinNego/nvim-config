@@ -65,6 +65,13 @@ return {
     opts = {
       preset = "classic",          -- 竖排列表，比横排格子好读
       delay = 200,
+      -- 不混入 Vim 内置的 g / z 前缀命令（gg、ge、zz 那些），只看自己的键
+      plugins = {
+        presets = {
+          g = false, z = false,
+          operators = false, motions = false, text_objects = false, windows = false, nav = false,
+        },
+      },
       -- 全部用纯文本：不要 nerd 图标（Esc/Space 等特殊键不再显示成方块）
       icons = (function()
         local plain = {}
@@ -75,6 +82,11 @@ return {
         return { mappings = false, group = "", keys = plain }
       end)(),
       win = { border = "rounded", padding = { 1, 2 }, title = " 按键 ", title_pos = "center" },
+      -- 过滤掉 Vim 内置的几个噪声键（保留 gc 注释、gr 引用这些有用的）
+      filter = function(mapping)
+        local skip = { ["gO"] = 1, ["gx"] = 1, ["g%"] = 1, ["g'" ] = 1, ["g`"] = 1, ["g&"] = 1, ["g8"] = 1 }
+        return skip[mapping.lhs] == nil
+      end,
     },
     config = function(_, opts)
       require("which-key").setup(opts)
@@ -89,6 +101,12 @@ return {
         { "<leader>r", group = "运行 / 编译" },
         { "<leader>s", group = "分屏" },
         { "<leader>t", group = "终端" },
+        { "<leader>m", group = "Markdown" },
+        { "<leader>u", group = "界面 / 主题" },
+        -- 普通前缀也起个名字，按 g 就知道这组是干嘛的
+        { "g", group = "跳转 / 引用" },
+        { "[", group = "上一个" },
+        { "]", group = "下一个" },
       })
     end,
   },
