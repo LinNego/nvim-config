@@ -64,7 +64,7 @@ local function refresh(buf, win)
       lines[#lines + 1] = ""
     end
     lines[#lines + 1] = (" 合计 %d 个文件 / %d 个仓库"):format(total, repo_count)
-    lines[#lines + 1] = " 回车 对比 · s 暂存 · S 全暂存 · c 提交 · C 全暂存+提交 · u 取消 · R 刷新 · q 关"
+    lines[#lines + 1] = " 回车 对比 · s 暂存 · c 提交 · C 全暂存+提交 · ? 更多键 · q 关"
   end
 
   vim.bo[buf].modifiable = true
@@ -243,6 +243,24 @@ function M.open()
   vim.keymap.set("n", "q", close, { buffer = buf, desc = "关闭", silent = true })
   vim.keymap.set("n", "<Esc>", close, { buffer = buf, desc = "关闭", silent = true })
   vim.keymap.set("n", "R", function() refresh(buf, win) end, { buffer = buf, desc = "刷新", silent = true })
+  local function show_help()
+    require("config.help").float("Git 面板", {
+      "  回车 / o   回车=左右对比   o=只看文件",
+      "  d          左右对比（等同回车）",
+      "  s          暂存光标所指文件（git add <file>）",
+      "  S          全部暂存（git add -A）",
+      "  u          取消暂存（git reset <file>）",
+      "  c          提交已暂存内容（底部输入框写说明）",
+      "  C          全部暂存 + 提交（一步到位）",
+      "  ]f / [f    跳到下一个 / 上一个文件（Tab 也行）",
+      "  R          重新扫描",
+      "  q / Esc    关闭面板",
+      "",
+      "  没暂存内容时按 c 会提示先暂存；提交失败会把 git 报错原文弹出来。",
+    })
+  end
+  vim.keymap.set("n", "?", show_help, { buffer = buf, desc = "面板键位帮助", silent = true })
+  vim.keymap.set("n", "g?", show_help, { buffer = buf, desc = "面板键位帮助", silent = true })
   vim.keymap.set("n", "]f", function() jump_file(buf, 1) end, { buffer = buf, desc = "下一个文件", silent = true })
   vim.keymap.set("n", "[f", function() jump_file(buf, -1) end, { buffer = buf, desc = "上一个文件", silent = true })
   vim.keymap.set("n", "<Tab>", function() jump_file(buf, 1) end, { buffer = buf, desc = "下一个文件", silent = true })

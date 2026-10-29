@@ -129,6 +129,17 @@ local function open_panel()
     end
   end, { buffer = buf, desc = "关闭该文件", silent = true })
   vim.keymap.set("n", "R", function() refresh(state) end, { buffer = buf, desc = "刷新", silent = true })
+  vim.keymap.set("n", "?", function()
+    require("config.help").float("打开的文件", {
+      "  j / k      上下移动",
+      "  回车 / o   切换到该文件（焦点回到编辑区）",
+      "  x          关闭该文件（bdelete）",
+      "  R          刷新列表",
+      "  q / Esc    收起面板",
+      "",
+      "  再按一次 <leader>bb 也能收起面板。",
+    })
+  end, { buffer = buf, desc = "面板键位帮助", silent = true })
 
   refresh(state)
   return state
