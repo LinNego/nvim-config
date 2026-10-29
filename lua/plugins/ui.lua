@@ -174,6 +174,25 @@ return {
           map("y", api.fs.copy.filename, "复制文件名")
           map("Y", api.fs.copy.relative_path, "复制相对路径")
           map("R", api.tree.reload, "刷新")
+          -- 在这个目录里搜索 / 找文件（不需要先切换 cwd）
+          map("S", function()
+            local node = api.tree.get_node_under_cursor()
+            local dir = node and node.absolute_path or vim.fn.getcwd()
+            if dir and vim.fn.isdirectory(dir) == 0 then dir = vim.fn.fnamemodify(dir, ":h") end
+            require("telescope.builtin").live_grep({
+              search_dirs = { dir },
+              prompt_title = "搜索目录 " .. vim.fn.fnamemodify(dir, ":~"),
+            })
+          end, "在此目录搜索内容")
+          map("F", function()
+            local node = api.tree.get_node_under_cursor()
+            local dir = node and node.absolute_path or vim.fn.getcwd()
+            if dir and vim.fn.isdirectory(dir) == 0 then dir = vim.fn.fnamemodify(dir, ":h") end
+            require("telescope.builtin").find_files({
+              cwd = dir,
+              prompt_title = "文件 " .. vim.fn.fnamemodify(dir, ":~"),
+            })
+          end, "在此目录找文件")
           map("H", api.tree.toggle_hidden_filter, "显示/隐藏点文件")
           map("s", api.node.open.vertical, "垂直分屏打开")
           map("i", api.node.open.horizontal, "水平分屏打开")

@@ -22,7 +22,14 @@ map("n", "<leader>sh", "<cmd>split<cr>", o("水平分屏"))
 
 -- ===== 搜索（telescope）=====
 map("n", "<C-p>", "<cmd>Telescope find_files<cr>", o("查找文件"))
-map("n", "<leader>fg", "<cmd>Telescope live_grep<cr>", o("全文搜索"))
+map("n", "<leader>fg", "<cmd>Telescope live_grep<cr>", o("全文搜索（当前仓库）"))
+map("n", "<leader>fG", function()
+  local dirs = require("config.repos").all()
+  require("telescope.builtin").live_grep({
+    search_dirs = dirs,
+    prompt_title = ("全工作区搜索（%d 个仓库）"):format(#dirs),
+  })
+end, o("全文搜索（所有仓库）"))
 map("n", "<leader>fb", "<cmd>Telescope buffers<cr>", o("切换缓冲区"))
 map("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", o("最近打开的文件"))
 map("n", "<leader>fd", "<cmd>Telescope diagnostics<cr>", o("问题列表"))
