@@ -146,3 +146,12 @@ end
 
 tune_cursorline()
 vim.api.nvim_create_autocmd("ColorScheme", { callback = tune_cursorline })
+
+-- 去掉 Neovim 0.11 自带的 gr* 前缀键（gra/grn/grr/gri/grt）。
+-- 否则 gr 既是映射又是前缀，按下去要等 timeout 才触发，还会弹一个菜单。
+-- 这些功能我们有自己的键：<leader>rn 重命名、<leader>ca 代码操作、gi 实现、gy 类型定义。
+for _, mode in ipairs({ "n", "x" }) do
+  for _, lhs in ipairs({ "grn", "gra", "grr", "gri", "grt", "grx" }) do
+    pcall(vim.keymap.del, mode, lhs)
+  end
+end
