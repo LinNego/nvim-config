@@ -127,3 +127,22 @@ vim.api.nvim_create_autocmd("OptionSet", {
     end
   end,
 })
+
+-- 当前行高亮：主题自带的值太淡（#222222 vs 背景 #1f1f1f，几乎看不出），
+-- 这里按当前主题的背景色自动提亮，并把行号标成醒目色
+local function tune_cursorline()
+  local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
+  local bg = normal.bg
+  if type(bg) ~= "number" then return end
+  local r = math.floor(bg / 65536) % 256
+  local g = math.floor(bg / 256) % 256
+  local b = bg % 256
+  local function up(v) return math.min(255, v + 16) end
+  vim.api.nvim_set_hl(0, "CursorLine", {
+    bg = string.format("#%02x%02x%02x", up(r), up(g), up(b)),
+  })
+  vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "#d7ba7d", bold = true })
+end
+
+tune_cursorline()
+vim.api.nvim_create_autocmd("ColorScheme", { callback = tune_cursorline })
