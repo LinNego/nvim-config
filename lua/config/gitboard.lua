@@ -64,7 +64,7 @@ local function refresh(buf, win)
       lines[#lines + 1] = ""
     end
     lines[#lines + 1] = (" 合计 %d 个文件 / %d 个仓库"):format(total, repo_count)
-    lines[#lines + 1] = " 回车 左右对比 · o 只看文件 · s 暂存 · u 取消暂存 · R 刷新 · q 关闭"
+    lines[#lines + 1] = " 回车 对比 · s 暂存 · S 全暂存 · c 提交 · C 全暂存+提交 · u 取消 · R 刷新 · q 关"
   end
 
   vim.bo[buf].modifiable = true
@@ -147,7 +147,29 @@ local function open_diff(t, panel)
   cleanup_empty_windows()
 end
 
-local function git(repo, ...)
+local git  -- 前向声明（commit 里要用）
+
+--- 提交：stage_all=true 时先 git add -A
+local function commit(repo, stage_all, on_done)
+  if stage_all then git(repo, "add", "-A") end
+  local staged = git(repo, "diff", "--cached", "--name-only")
+  if #staged == 0 then
+    vim.notify("没有已暂存的内容：按 s 暂存单文件，或按 C 全部暂存并提交", vim.log.levels.WARN, { title = "Git" })
+    return
+  end
+  vim.ui.input({ prompt = ("提交信息（%d 个文件）："):format(#staged) }, function(msg)
+    if not msg or vim.trim(msg) == "" then return end
+    local out = vim.fn.systemlist({ "git", "-C", repo, "commit", "-m", msg })
+    if vim.v.shell_error == 0 then
+      vim.notify("已提交：" .. msg, vim.log.levels.INFO, { title = "Git" })
+    else
+      vim.notify("提交失败：" .. table.concat(out, " "), vim.log.levels.ERROR, { title = "Git" })
+    end
+    if on_done then on_done() end
+  end)
+end
+
+function git(repo, ...)
   local args = { "git", "-C", repo, "-c", "core.quotepath=false", "--no-pager" }
   for _, a in ipairs({ ... }) do table.insert(args, a) end
   return vim.fn.systemlist(args)
@@ -247,6 +269,23 @@ function M.open()
       vim.notify("已暂存 " .. t.path, vim.log.levels.INFO, { title = "Git" })
     end
   end, { buffer = buf, desc = "暂存文件", silent = true })
+  vim.keymap.set("n", "c", function()
+    local t = target_at(buf)
+    local repo = (t and t.repo) or vim.fn.getcwd()
+    commit(repo, false, function() refresh(buf, win) end)
+  end, { buffer = buf, desc = "提交（暂存区）", silent = true })
+  vim.keymap.set("n", "C", function()
+    local t = target_at(buf)
+    local repo = (t and t.repo) or vim.fn.getcwd()
+    commit(repo, true, function() refresh(buf, win) end)
+  end, { buffer = buf, desc = "全部暂存并提交", silent = true })
+  vim.keymap.set("n", "S", function()
+    local t = target_at(buf)
+    if not t or not t.repo then return end
+    git(t.repo, "add", "-A")
+    refresh(buf, win)
+    vim.notify("已全部暂存：" .. vim.fn.fnamemodify(t.repo, ":t"), vim.log.levels.INFO, { title = "Git" })
+  end, { buffer = buf, desc = "全部暂存", silent = true })
   vim.keymap.set("n", "u", function()
     local t = target_at(buf)
     if t and t.kind == "file" then
@@ -267,6 +306,16 @@ function M.toggle()
     return
   end
   M.open()
+end
+
+--- 在任意位置快速提交当前仓库的暂存内容
+function M.quick_commit()
+  local repo = vim.fn.systemlist({ "git", "rev-parse", "--show-toplevel" })
+  if vim.v.shell_error ~= 0 or #repo == 0 then
+    vim.notify("当前目录不在 git 仓库里", vim.log.levels.WARN, { title = "Git" })
+    return
+  end
+  commit(repo[1], false)
 end
 
 vim.api.nvim_create_user_command("GitBoard", M.toggle, { desc = "Git 总览面板（所有仓库）开/关" })

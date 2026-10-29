@@ -62,6 +62,7 @@ map("n", "]d", function() vim.diagnostic.jump({ count = 1 }) end, o("下一个�
 
 -- ===== 多仓库工作区 =====
 map("n", "<leader>gs", function() require("config.gitboard").toggle() end, o("Git 总览面板 开/关"))
+map("n", "<leader>gC", function() require("config.gitboard").quick_commit() end, o("快速提交（当前仓库暂存区）"))
 map("n", "<leader>bb", function() require("config.bufpanel").toggle() end, o("打开的文件列表 开/关"))
 map("n", "<leader>gr", function() require("config.repos").pick() end, o("切换 git 仓库"))
 map("n", "<leader>gR", function() require("config.repos").back() end, o("返回上一个仓库/目录"))
